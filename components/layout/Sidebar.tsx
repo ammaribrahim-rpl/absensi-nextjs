@@ -2,7 +2,7 @@
 // components/layout/Sidebar.tsx — Modern responsive sidebar, mobile header, and bottom navigation
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 interface NavItem {
   href: string;
@@ -32,9 +32,7 @@ export default function Sidebar({
   badgeColor = '#7e22ce',
 }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
 
   // Close when pathname changes
   useEffect(() => {
@@ -62,11 +60,6 @@ export default function Sidebar({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  async function handleLogout() {
-    setLoggingOut(true);
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-  }
 
   // Karyawan quick navigation items for mobile bottom bar
   const karyawanBottomItems = [
@@ -253,33 +246,6 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* Logout Button */}
-        <div style={{ padding: '14px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              width: '100%',
-              padding: '11px 16px',
-              background: 'rgba(220,38,38,0.2)',
-              color: '#fca5a5',
-              border: '1px solid rgba(220,38,38,0.3)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              transition: 'background 0.15s, transform 0.1s',
-            }}
-          >
-            <i className="fas fa-sign-out-alt" style={{ width: '16px' }} />
-            {loggingOut ? 'Keluar...' : `Logout ${role === 'owner' ? 'Owner' : role === 'admin' ? 'Admin' : ''}`}
-          </button>
-        </div>
       </aside>
 
       {/* ── Mobile Overlay Backdrop ── */}

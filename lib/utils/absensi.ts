@@ -178,15 +178,15 @@ export function getMaxIstirahat(jabatan: string, nowJakarta?: Date): number {
 }
 
 // ─── isTelat ─────────────────────────────────────────────────────────────────
-// Cek apakah absen masuk terlambat (setelah 08:00 WIB) — kecuali OPERATOR
+// Cek apakah absen masuk terlambat (setelah 08:00 WIB) — kecuali TESTER
 export function isTelat(
   tipeAbsen: string,
   jabatan: string,
   nowJakarta: Date,
   durasiIstirahatMenit?: number
 ): boolean {
-  const isOperator = jabatan.toUpperCase() === 'OPERATOR';
-  if (isOperator) return false;
+  const isTester = (jabatan ?? '').toUpperCase() === 'TESTER';
+  if (isTester) return false;
 
   if (tipeAbsen === 'masuk') {
     const jam = nowJakarta.getHours();

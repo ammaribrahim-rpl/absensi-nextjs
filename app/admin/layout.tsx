@@ -7,7 +7,6 @@ const adminNav = [
   { href: '/admin/karyawan',       icon: 'fas fa-users',          label: 'Kelola Karyawan' },
   { href: '/admin/jabatan',        icon: 'fas fa-briefcase',      label: 'Kelola Jabatan' },
   { href: '/admin/profil',         icon: 'fas fa-user-circle',    label: 'Profil Admin' },
-  { href: '/admin/ganti-password', icon: 'fas fa-key',            label: 'Ganti Password' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -29,10 +29,13 @@ export async function POST(request: NextRequest) {
   const nowUTC = new Date();
   const nowJakarta = toZonedTime(nowUTC, TZ);
   const tanggalHari = getTanggalHariIni();
-  const isOperator = k.jabatan.toUpperCase() === 'OPERATOR';
+  const isTester = (k.jabatan ?? '').toUpperCase() === 'TESTER';
 
-  // ─── Reset Testing (khusus OPERATOR) ─────────────────────────────────────
-  if (tipeRaw === 'reset_test' && isOperator) {
+  // ─── Reset Testing (khusus TESTER) ─────────────────────────────────────
+  if (tipeRaw === 'reset_test') {
+    if (!isTester) {
+      return NextResponse.json({ error: 'Fitur reset presensi hanya untuk role Tester.' }, { status: 403 });
+    }
     await supabase
       .from('tb_absen')
       .delete()

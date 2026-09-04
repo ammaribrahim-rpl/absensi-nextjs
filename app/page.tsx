@@ -39,42 +39,20 @@ export default function LandingPage() {
           Sistem Manajemen Presensi Terintegrasi
         </p>
 
-        {/* Portal Buttons */}
+        {/* Single Login Button */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <Link href="/owner/login" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
-            background: 'linear-gradient(135deg, #7e22ce, #6b21a8)',
-            color: '#fff', border: '1px solid #a855f7',
-            boxShadow: '0 4px 14px rgba(126,34,206,0.35)',
-            fontWeight: 700, fontSize: '0.9rem', transition: 'opacity 0.2s',
-          }}>
-            <i className="fas fa-crown" style={{ color: '#facc15' }} />
-            Login Owner
-          </Link>
-
           <Link href="/login" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
-            background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
-            color: '#fff', border: '1px solid #6366f1',
-            boxShadow: '0 4px 14px rgba(79,70,229,0.35)',
-            fontWeight: 700, fontSize: '0.9rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            padding: '14px 24px', borderRadius: '12px', textDecoration: 'none',
+            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+            color: '#fff', border: '1px solid rgba(255,255,255,0.25)',
+            boxShadow: '0 6px 22px rgba(79,70,229,0.45)',
+            fontWeight: 700, fontSize: '1rem',
+            letterSpacing: '0.02em',
+            transition: 'transform 0.15s, box-shadow 0.15s',
           }}>
-            <i className="fas fa-user-shield" style={{ color: '#a5b4fc' }} />
-            Login Administrator
-          </Link>
-
-          <Link href="/karyawan/login" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
-            background: '#fff', color: '#1e1b4b',
-            border: '1px solid #fff',
-            boxShadow: '0 4px 14px rgba(255,255,255,0.2)',
-            fontWeight: 700, fontSize: '0.9rem',
-          }}>
-            <i className="fas fa-users" style={{ color: '#7e22ce' }} />
-            Login Karyawan
+            <i className="fas fa-sign-in-alt" style={{ fontSize: '1.1rem' }} />
+            Masuk / Login
           </Link>
         </div>
 

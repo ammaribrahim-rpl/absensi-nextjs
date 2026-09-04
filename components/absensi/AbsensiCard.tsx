@@ -174,7 +174,7 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
   const absenIstMulai    = absen.find(a => a.tipe_absen === 'istirahat_mulai');
   const absenIstSelesai  = absen.find(a => a.tipe_absen === 'istirahat_selesai');
   const absenPulang      = absen.find(a => a.tipe_absen === 'pulang');
-  const isOperator       = karyawan.jabatan.toUpperCase() === 'OPERATOR';
+  const isTester         = (karyawan.jabatan ?? '').toUpperCase() === 'TESTER';
   const maxMenit         = getMaxIstirahatClient(karyawan.jabatan);
 
   // Determine current step / allowed action
@@ -276,11 +276,11 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
         ) : null}
       </div>
 
-      {/* Reset Button (Operator only) */}
-      {isOperator && absenMasuk && !sudahLengkap && (
+      {/* Reset Button (Tester only) */}
+      {isTester && (absenMasuk || sudahLengkap) && (
         <button
           className="btn-absen"
-          style={{ background: '#f3f4f6', color: '#374151', boxShadow: 'none', marginBottom: '12px' }}
+          style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', boxShadow: 'none', marginBottom: '12px' }}
           onClick={() => handleAbsen('reset_test')}
           disabled={!!loading}
         >

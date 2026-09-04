@@ -155,7 +155,8 @@ INSERT INTO tb_jabatan (jabatan, icon) VALUES
     ('Staff IT',   'fas fa-cogs'),
     ('K1',         'fas fa-cash-register'),
     ('K2',         'fas fa-cash-register'),
-    ('Operator',   'fas fa-tools')
+    ('Operator',   'fas fa-tools'),
+    ('Tester',     'fas fa-vial')
 ON CONFLICT (jabatan) DO UPDATE SET icon = EXCLUDED.icon;
 
 -- ─── tb_owner ────────────────────────────────────────────────────────────────

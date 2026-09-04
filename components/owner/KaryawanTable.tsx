@@ -26,13 +26,7 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
 
   // Password visibility per row
   const [shownPassIds, setShownPassIds] = useState<Set<string>>(new Set());
-
-  // Change password modal
-  const [changePwTarget, setChangePwTarget] = useState<Karyawan | null>(null);
-  const [newPass, setNewPass] = useState('');
-  const [showNewPass, setShowNewPass] = useState(false);
-  const [changePwLoading, setChangePwLoading] = useState(false);
-  const [changePwMsg, setChangePwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showEditPass, setShowEditPass] = useState(false);
   const [karyawanData, setKaryawanData] = useState(karyawan);
 
   function toggleShowPass(id: string) {
@@ -61,9 +55,8 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
     );
   }
 
-  function openEdit(k: Karyawan) { setSelected(k); setShowModal('edit'); setMsg(''); }
+  function openEdit(k: Karyawan) { setSelected(k); setShowModal('edit'); setMsg(''); setShowEditPass(false); }
   function openDelete(k: Karyawan) { setSelected(k); setShowModal('delete'); }
-  function openChangePw(k: Karyawan) { setChangePwTarget(k); setNewPass(''); setShowNewPass(false); setChangePwMsg(null); }
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setLoading(true); setMsg('');
@@ -79,7 +72,12 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
   async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setLoading(true); setMsg('');
     const fd = new FormData(e.currentTarget);
-    const body = { id_karyawan: selected!.id_karyawan, ...Object.fromEntries(fd.entries()) };
+    const formObj = Object.fromEntries(fd.entries());
+    // Only send password if filled
+    if (typeof formObj.password === 'string' && !formObj.password.trim()) {
+      delete formObj.password;
+    }
+    const body = { id_karyawan: selected!.id_karyawan, ...formObj };
     const res = await fetch('/api/owner/karyawan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = await res.json();
     if (d.success) { setShowModal(null); router.refresh(); }
@@ -91,26 +89,6 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
     setLoading(true);
     await fetch(`/api/owner/karyawan?id=${selected!.id_karyawan}`, { method: 'DELETE' });
     setShowModal(null); router.refresh(); setLoading(false);
-  }
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (!changePwTarget || !newPass.trim()) return;
-    setChangePwLoading(true); setChangePwMsg(null);
-    const res = await fetch('/api/owner/karyawan', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_karyawan: changePwTarget.id_karyawan, password: newPass.trim() }),
-    });
-    const d = await res.json();
-    if (d.success) {
-      setChangePwMsg({ type: 'success', text: 'Password berhasil diubah.' });
-      setKaryawanData(prev => prev.map(k => k.id_karyawan === changePwTarget.id_karyawan ? { ...k, password: newPass.trim() } : k));
-      setTimeout(() => { setChangePwTarget(null); setNewPass(''); }, 800);
-    } else {
-      setChangePwMsg({ type: 'error', text: d.error ?? 'Gagal mengubah password.' });
-    }
-    setChangePwLoading(false);
   }
 
   return (
@@ -160,7 +138,6 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
                 <td>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button className="btn btn-outline btn-sm" title="Edit" onClick={() => openEdit(k)}><i className="fas fa-pen" /></button>
-                    <button className="btn btn-warning btn-sm" title="Ganti Password" onClick={() => openChangePw(k)}><i className="fas fa-key" /></button>
                     <button className="btn btn-danger btn-sm" title="Hapus" onClick={() => openDelete(k)}><i className="fas fa-trash" /></button>
                   </div>
                 </td>
@@ -225,7 +202,26 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div><label className="form-label">Nama Lengkap *</label><input name="nama" type="text" className="form-control" defaultValue={selected.nama} required /></div>
                   <div><label className="form-label">Username *</label><input name="username" type="text" className="form-control" defaultValue={selected.username} required /></div>
-                  <div><label className="form-label">Password Baru (kosongkan jika tidak diubah)</label><input name="password" type="password" className="form-control" /></div>
+                  <div>
+                    <label className="form-label">Password Baru (kosongkan jika tidak diubah)</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        name="password"
+                        type={showEditPass ? 'text' : 'password'}
+                        className="form-control"
+                        placeholder="Biarkan kosong jika tidak diubah"
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEditPass(v => !v)}
+                        style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '4px' }}
+                        title={showEditPass ? 'Sembunyikan' : 'Lihat password'}
+                      >
+                        <i className={`fas ${showEditPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                      </button>
+                    </div>
+                  </div>
                   <div><label className="form-label">Jabatan</label><select name="jabatan" className="form-control" defaultValue={selected.jabatan}>{jabatanList.map(j => <option key={j.jabatan} value={j.jabatan}>{j.jabatan}</option>)}</select></div>
                   <div><label className="form-label">Jenis Kelamin</label><select name="jenkel" className="form-control" defaultValue={selected.jenkel}><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
                   <div><label className="form-label">Agama</label><select name="agama" className="form-control" defaultValue={selected.agama}>{['Islam','Kristen','Katolik','Hindu','Buddha','Konghucu'].map(a => <option key={a}>{a}</option>)}</select></div>
@@ -256,57 +252,6 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
               <button className="btn btn-outline btn-sm" onClick={() => setShowModal(null)}>Batal</button>
               <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={loading}>{loading ? 'Menghapus...' : 'Ya, Hapus'}</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Change Password Modal */}
-      {changePwTarget && (
-        <div className="modal-backdrop" onClick={() => setChangePwTarget(null)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
-                <i className="fas fa-key" style={{ marginRight: '6px', color: '#7e22ce' }} />
-                Ganti Password: <span style={{ color: '#4f46e5' }}>{changePwTarget.nama}</span>
-              </h3>
-              <button onClick={() => setChangePwTarget(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
-            </div>
-            <form onSubmit={handleChangePassword}>
-              <div className="modal-body">
-                {changePwMsg && (
-                  <div className={`alert ${changePwMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '12px' }}>
-                    <i className={`fas ${changePwMsg.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} /> {changePwMsg.text}
-                  </div>
-                )}
-                <div>
-                  <label className="form-label">Password Baru *</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showNewPass ? 'text' : 'password'}
-                      className="form-control"
-                      placeholder="Masukkan password baru"
-                      value={newPass}
-                      onChange={e => setNewPass(e.target.value)}
-                      required minLength={3}
-                      style={{ paddingRight: '40px' }}
-                    />
-                    <button type="button" onClick={() => setShowNewPass(v => !v)}
-                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '4px' }}>
-                      <i className={`fas ${showNewPass ? 'fa-eye-slash' : 'fa-eye'}`} />
-                    </button>
-                  </div>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>
-                    Password disimpan sebagai teks biasa dan dapat dilihat oleh Owner.
-                  </p>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setChangePwTarget(null)}>Batal</button>
-                <button type="submit" className="btn btn-owner btn-sm" disabled={changePwLoading || !newPass.trim()}>
-                  {changePwLoading ? <><i className="fas fa-spinner fa-spin" /> Menyimpan...</> : <><i className="fas fa-save" /> Simpan</>}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

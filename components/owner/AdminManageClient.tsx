@@ -17,12 +17,12 @@ export default function AdminManageClient({ admins: initData }: { admins: Admin[
   const [loading, setLoading] = useState(false);
   const [shownPassIds, setShownPassIds] = useState<Set<number>>(new Set());
 
-  // Modal ganti password
-  const [changeTarget, setChangeTarget] = useState<Admin | null>(null);
-  const [newPass, setNewPass] = useState('');
-  const [showNewPass, setShowNewPass] = useState(false);
-  const [changeLoading, setChangeLoading] = useState(false);
-  const [changeMsg, setChangeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // Modal edit admin
+  const [editTarget, setEditTarget] = useState<Admin | null>(null);
+  const [editPass, setEditPass] = useState('');
+  const [showEditPass, setShowEditPass] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editMsg, setEditMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   function toggleShowPass(id: number) {
     setShownPassIds(prev => {
@@ -52,24 +52,35 @@ export default function AdminManageClient({ admins: initData }: { admins: Admin[
     setData(prev => prev.filter(a => a.id !== id));
   }
 
-  async function handleChangePassword(e: React.FormEvent) {
+  async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!changeTarget || !newPass.trim()) return;
-    setChangeLoading(true); setChangeMsg(null);
+    if (!editTarget) return;
+    setEditLoading(true); setEditMsg(null);
+    const fd = new FormData(e.currentTarget);
+    const username = fd.get('username')?.toString().trim();
+    const password = fd.get('password')?.toString().trim();
+    const body: Record<string, unknown> = { id: editTarget.id };
+    if (username) body.username = username;
+    if (password) body.password = password;
+
     const res = await fetch('/api/owner/admin', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: changeTarget.id, password: newPass.trim() }),
+      body: JSON.stringify(body),
     });
     const d = await res.json();
     if (d.success) {
-      setChangeMsg({ type: 'success', text: 'Password berhasil diubah.' });
-      setData(prev => prev.map(a => a.id === changeTarget.id ? { ...a, password: newPass.trim() } : a));
-      setTimeout(() => { setChangeTarget(null); setNewPass(''); }, 800);
+      setEditMsg({ type: 'success', text: 'Data admin berhasil diperbarui.' });
+      setData(prev => prev.map(a => a.id === editTarget.id ? {
+        ...a,
+        username: username || a.username,
+        password: password || a.password
+      } : a));
+      setTimeout(() => { setEditTarget(null); }, 800);
     } else {
-      setChangeMsg({ type: 'error', text: d.error ?? 'Gagal mengubah password.' });
+      setEditMsg({ type: 'error', text: d.error ?? 'Gagal memperbarui admin.' });
     }
-    setChangeLoading(false);
+    setEditLoading(false);
   }
 
   function renderPassword(a: Admin) {
@@ -132,9 +143,9 @@ export default function AdminManageClient({ admins: initData }: { admins: Admin[
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn btn-warning btn-sm" title="Ganti Password"
-                      onClick={() => { setChangeTarget(a); setNewPass(''); setChangeMsg(null); }}>
-                      <i className="fas fa-key" />
+                    <button className="btn btn-outline btn-sm" title="Edit Admin"
+                      onClick={() => { setEditTarget(a); setEditPass(''); setEditMsg(null); setShowEditPass(false); }}>
+                      <i className="fas fa-pen" />
                     </button>
                     <button className="btn btn-danger btn-sm" title="Hapus Admin"
                       onClick={() => handleDelete(a.id, a.username)}>
@@ -181,50 +192,55 @@ export default function AdminManageClient({ admins: initData }: { admins: Admin[
         </div>
       )}
 
-      {/* ── Modal Ganti Password Admin ── */}
-      {changeTarget && (
-        <div className="modal-backdrop" onClick={() => setChangeTarget(null)}>
+      {/* ── Modal Edit Admin ── */}
+      {editTarget && (
+        <div className="modal-backdrop" onClick={() => setEditTarget(null)}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
-                <i className="fas fa-key" style={{ marginRight: '6px', color: '#7e22ce' }} />
-                Ganti Password: <span style={{ color: '#4f46e5' }}>{changeTarget.username}</span>
+                <i className="fas fa-pen" style={{ marginRight: '6px', color: '#7e22ce' }} />
+                Edit Admin: <span style={{ color: '#4f46e5' }}>{editTarget.username}</span>
               </h3>
-              <button onClick={() => setChangeTarget(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
+              <button onClick={() => setEditTarget(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
             </div>
-            <form onSubmit={handleChangePassword}>
+            <form onSubmit={handleEdit}>
               <div className="modal-body">
-                {changeMsg && (
-                  <div className={`alert ${changeMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '12px' }}>
-                    <i className={`fas ${changeMsg.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} /> {changeMsg.text}
+                {editMsg && (
+                  <div className={`alert ${editMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '12px' }}>
+                    <i className={`fas ${editMsg.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} /> {editMsg.text}
                   </div>
                 )}
+                <div style={{ marginBottom: '12px' }}>
+                  <label className="form-label">Username *</label>
+                  <input type="text" name="username" className="form-control" defaultValue={editTarget.username} required />
+                </div>
                 <div>
-                  <label className="form-label">Password Baru *</label>
+                  <label className="form-label">Password Baru (kosongkan jika tidak diubah)</label>
                   <div style={{ position: 'relative' }}>
                     <input
-                      type={showNewPass ? 'text' : 'password'}
+                      type={showEditPass ? 'text' : 'password'}
+                      name="password"
                       className="form-control"
-                      placeholder="Masukkan password baru"
-                      value={newPass}
-                      onChange={e => setNewPass(e.target.value)}
-                      required minLength={3}
+                      placeholder="Biarkan kosong jika tidak diubah"
+                      value={editPass}
+                      onChange={e => setEditPass(e.target.value)}
                       style={{ paddingRight: '40px' }}
                     />
-                    <button type="button" onClick={() => setShowNewPass(v => !v)}
-                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '4px' }}>
-                      <i className={`fas ${showNewPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    <button type="button" onClick={() => setShowEditPass(v => !v)}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '4px' }}
+                      title={showEditPass ? 'Sembunyikan' : 'Lihat password'}>
+                      <i className={`fas ${showEditPass ? 'fa-eye-slash' : 'fa-eye'}`} />
                     </button>
                   </div>
                   <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>
-                    Password akan disimpan sebagai teks biasa dan dapat dilihat oleh Owner.
+                    Password disimpan sebagai teks biasa agar dapat dilihat oleh Owner.
                   </p>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setChangeTarget(null)}>Batal</button>
-                <button type="submit" className="btn btn-owner btn-sm" disabled={changeLoading || !newPass.trim()}>
-                  {changeLoading ? <><i className="fas fa-spinner fa-spin" /> Menyimpan...</> : <><i className="fas fa-save" /> Simpan</>}
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditTarget(null)}>Batal</button>
+                <button type="submit" className="btn btn-owner btn-sm" disabled={editLoading}>
+                  {editLoading ? <><i className="fas fa-spinner fa-spin" /> Menyimpan...</> : <><i className="fas fa-save" /> Simpan</>}
                 </button>
               </div>
             </form>
