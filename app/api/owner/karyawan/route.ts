@@ -5,14 +5,14 @@ import { getSession } from '@/lib/auth/session';
 import bcrypt from 'bcryptjs';
 import { generateBaseIdKaryawan } from '@/lib/utils/absensi';
 
-async function checkOwner() {
+async function checkOwnerOrAdmin() {
   const s = await getSession();
-  if (!s || s.role !== 'owner') return null;
-  return s as Extract<typeof s, { role: 'owner' }>;
+  if (!s || (s.role !== 'owner' && s.role !== 'admin')) return null;
+  return s;
 }
 
 export async function GET(request: NextRequest) {
-  if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await checkOwnerOrAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const supabase = createAdminClient();
   const q = request.nextUrl.searchParams.get('q') ?? '';
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await checkOwnerOrAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await request.json().catch(() => null);
   const { nama, username, password, jabatan, jenkel, agama, alamat, no_tel, tmp_tgl_lahir, tgl_masuk } = body ?? {};
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await checkOwnerOrAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await request.json().catch(() => null);
   const { id_karyawan, ...updates } = body ?? {};
   if (!id_karyawan) return NextResponse.json({ error: 'ID karyawan diperlukan.' }, { status: 400 });
@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await checkOwnerOrAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const id = request.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'ID diperlukan.' }, { status: 400 });
   const supabase = createAdminClient();
