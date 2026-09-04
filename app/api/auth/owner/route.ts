@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
     .from('tb_owner').select('id, username, password, nama')
     .eq('username', username).single();
 
-  if (error || !owner)
+  if (error && error.code !== 'PGRST116') {
+    console.error('Supabase query error (owner):', error);
+    return NextResponse.json({ error: 'Gagal terhubung ke database. Pastikan konfigurasi Supabase di .env.local sudah benar.' }, { status: 500 });
+  }
+
+  if (!owner)
     return NextResponse.json({ error: 'Akun Owner tidak ditemukan.' }, { status: 401 });
 
   // Support $2y$ (PHP) dan $2b$ (Node.js)

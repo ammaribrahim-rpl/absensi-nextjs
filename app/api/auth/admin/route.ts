@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
     .from('tb_daftar').select('id, username, password')
     .eq('username', username).single();
 
-  if (error || !admin)
+  if (error && error.code !== 'PGRST116') {
+    console.error('Supabase query error (admin):', error);
+    return NextResponse.json({ error: 'Gagal terhubung ke database. Pastikan konfigurasi Supabase di .env.local sudah benar.' }, { status: 500 });
+  }
+
+  if (!admin)
     return NextResponse.json({ error: 'Akun Administrator tidak ditemukan.' }, { status: 401 });
 
   if (!(await comparePassword(password, admin.password)))

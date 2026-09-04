@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
     .select('id_karyawan, username, password, nama, jabatan, jenkel, agama, alamat, no_tel, tmp_tgl_lahir, foto, tgl_masuk')
     .eq('username', username).single();
 
-  if (error || !k)
+  if (error && error.code !== 'PGRST116') {
+    console.error('Supabase query error (karyawan):', error);
+    return NextResponse.json({ error: 'Gagal terhubung ke database. Pastikan konfigurasi Supabase di .env.local sudah benar.' }, { status: 500 });
+  }
+
+  if (!k)
     return NextResponse.json({ error: 'Akun karyawan tidak ditemukan.' }, { status: 401 });
 
   if (!(await comparePassword(password, k.password)))
