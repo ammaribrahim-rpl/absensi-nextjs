@@ -11,10 +11,14 @@ export function normalizeHash(hash: string): string {
 }
 
 /**
- * Bandingkan password plain-text dengan hash (support PHP $2y$ dan Node $2b$)
+ * Bandingkan password plain-text dengan hash (support PHP $2y$, Node $2b$, dan plain-text)
  */
 export async function comparePassword(plain: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(plain, normalizeHash(hash));
+  if (!hash) return false;
+  if (hash.startsWith('$2y$') || hash.startsWith('$2b$') || hash.startsWith('$2a$')) {
+    return bcrypt.compare(plain, normalizeHash(hash));
+  }
+  return plain === hash;
 }
 
 /**

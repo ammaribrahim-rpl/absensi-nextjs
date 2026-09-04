@@ -9,6 +9,15 @@ export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [passMode, setPassMode] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (!confirm('Apakah Anda yakin ingin logout?')) return;
+    setLoggingOut(true);
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setLoading(true); setMsg(null);
@@ -119,7 +128,7 @@ export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja
       </div>
 
       {/* Change Password */}
-      <div className="card card-padded">
+      <div className="card card-padded" style={{ marginBottom: '20px' }}>
         <h3 style={{ margin: '0 0 14px', fontSize: '0.9rem', fontWeight: 700 }}>
           <i className="fas fa-key" style={{ marginRight: '6px', color: '#d97706' }} /> Ganti Password
         </h3>
@@ -132,7 +141,34 @@ export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja
               return (
                 <div key={name} style={{ marginBottom: '10px' }}>
                   <label className="form-label">{label}</label>
-                  <input type="password" name={name} className="form-control" required minLength={name !== 'pass_lama' ? 6 : undefined} />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      name={name}
+                      className="form-control"
+                      required
+                      minLength={name !== 'pass_lama' ? 6 : undefined}
+                      style={{ paddingRight: '40px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#6b7280',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        fontSize: '0.9rem',
+                      }}
+                    >
+                      <i className={`fas ${showPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -142,6 +178,26 @@ export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja
             </div>
           </form>
         )}
+      </div>
+
+      {/* ── Tombol Logout di Profil Karyawan ── */}
+      <div className="card card-padded" style={{ border: '1px solid #fee2e2', background: '#fffafa' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: '0.9rem', fontWeight: 700, color: '#dc2626' }}>
+          <i className="fas fa-sign-out-alt" style={{ marginRight: '6px' }} /> Logout Akun
+        </h3>
+        <p style={{ margin: '0 0 14px', fontSize: '0.8rem', color: '#6b7280' }}>
+          Keluar dari sesi akun karyawan Anda pada perangkat ini.
+        </p>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="btn btn-danger btn-sm"
+          style={{ fontWeight: 600, padding: '8px 18px' }}
+        >
+          <i className="fas fa-sign-out-alt" />
+          {loggingOut ? 'Memproses Keluar...' : 'Logout dari Akun Ini'}
+        </button>
       </div>
     </div>
   );

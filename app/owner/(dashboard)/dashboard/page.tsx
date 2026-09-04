@@ -20,7 +20,8 @@ export default async function OwnerDashboardPage({ searchParams }: { searchParam
     { count: totalKaryawan }, { count: totalAdmin },
     { data: jabatanRows }, { count: izinProses },
     { count: absenTotalRaw }, { data: absenTelatRows },
-    { data: karyawanJabatan }
+    { data: karyawanJabatan },
+    { data: lupaPassRequests }
   ] = await Promise.all([
     supabase.from('tb_karyawan').select('*', { count: 'exact', head: true }),
     supabase.from('tb_daftar').select('*', { count: 'exact', head: true }),
@@ -33,6 +34,12 @@ export default async function OwnerDashboardPage({ searchParams }: { searchParam
       ? supabase.from('tb_absen').select('id').eq('is_telat', 1).gte('waktu', cutoff.toISOString())
       : supabase.from('tb_absen').select('id').eq('is_telat', 1),
     supabase.from('tb_karyawan').select('jabatan'),
+    supabase
+      .from('tb_notifikasi')
+      .select('id, id_karyawan, nama, pesan, tipe, dibaca, created_at')
+      .eq('tipe', 'lupa_password')
+      .eq('dibaca', 0)
+      .order('id', { ascending: false }),
   ]);
 
   // Jabatan distribution
@@ -55,6 +62,7 @@ export default async function OwnerDashboardPage({ searchParams }: { searchParam
         absenTelat: absenTelatRows?.length ?? 0,
       }}
       jabatanDist={jabatanDist}
+      lupaPassRequests={lupaPassRequests ?? []}
     />
   );
 }

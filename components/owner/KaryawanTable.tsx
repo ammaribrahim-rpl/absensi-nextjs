@@ -3,10 +3,15 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Karyawan {
-  id_karyawan: string; username: string; nama: string; jabatan: string;
+  id_karyawan: string; username: string; password: string; nama: string; jabatan: string;
   jenkel: string; no_tel: string; tgl_masuk: string | null;
   tgl_masuk_formatted: string; masa_kerja: string;
   tmp_tgl_lahir: string; agama: string; alamat: string;
+}
+
+function isPlainPassword(p: string): boolean {
+  if (!p) return false;
+  return !(p.startsWith('$2y$') || p.startsWith('$2b$') || p.startsWith('$2a$'));
 }
 
 export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
@@ -19,8 +24,46 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Password visibility per row
+  const [shownPassIds, setShownPassIds] = useState<Set<string>>(new Set());
+
+  // Change password modal
+  const [changePwTarget, setChangePwTarget] = useState<Karyawan | null>(null);
+  const [newPass, setNewPass] = useState('');
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [changePwLoading, setChangePwLoading] = useState(false);
+  const [changePwMsg, setChangePwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [karyawanData, setKaryawanData] = useState(karyawan);
+
+  function toggleShowPass(id: string) {
+    setShownPassIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function renderPassword(k: Karyawan) {
+    const shown = shownPassIds.has(k.id_karyawan);
+    const isPlain = isPlainPassword(k.password);
+    const display = !k.password ? '-' : isPlain
+      ? (shown ? k.password : '••••••••')
+      : (shown ? k.password.substring(0, 20) + '...' : '[Hash Bcrypt]');
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: '110px' }}>
+        <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: isPlain ? '#1e293b' : '#9ca3af' }}>{display}</span>
+        <button type="button" onClick={() => toggleShowPass(k.id_karyawan)}
+          style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '2px 4px', fontSize: '0.78rem' }}
+          title={shown ? 'Sembunyikan' : 'Lihat password'}>
+          <i className={`fas ${shown ? 'fa-eye-slash' : 'fa-eye'}`} />
+        </button>
+      </div>
+    );
+  }
+
   function openEdit(k: Karyawan) { setSelected(k); setShowModal('edit'); setMsg(''); }
   function openDelete(k: Karyawan) { setSelected(k); setShowModal('delete'); }
+  function openChangePw(k: Karyawan) { setChangePwTarget(k); setNewPass(''); setShowNewPass(false); setChangePwMsg(null); }
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setLoading(true); setMsg('');
@@ -48,6 +91,26 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
     setLoading(true);
     await fetch(`/api/owner/karyawan?id=${selected!.id_karyawan}`, { method: 'DELETE' });
     setShowModal(null); router.refresh(); setLoading(false);
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!changePwTarget || !newPass.trim()) return;
+    setChangePwLoading(true); setChangePwMsg(null);
+    const res = await fetch('/api/owner/karyawan', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_karyawan: changePwTarget.id_karyawan, password: newPass.trim() }),
+    });
+    const d = await res.json();
+    if (d.success) {
+      setChangePwMsg({ type: 'success', text: 'Password berhasil diubah.' });
+      setKaryawanData(prev => prev.map(k => k.id_karyawan === changePwTarget.id_karyawan ? { ...k, password: newPass.trim() } : k));
+      setTimeout(() => { setChangePwTarget(null); setNewPass(''); }, 800);
+    } else {
+      setChangePwMsg({ type: 'error', text: d.error ?? 'Gagal mengubah password.' });
+    }
+    setChangePwLoading(false);
   }
 
   return (
@@ -78,16 +141,17 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
       <div className="card table-wrapper">
         <table>
           <thead>
-            <tr><th>No</th><th>Nama</th><th>Username</th><th>Jabatan</th><th>Kelamin</th><th>No. Telp</th><th>Tgl Masuk</th><th>Masa Kerja</th><th>Aksi</th></tr>
+            <tr><th>No</th><th>Nama</th><th>Username</th><th>Password</th><th>Jabatan</th><th>Kelamin</th><th>No. Telp</th><th>Tgl Masuk</th><th>Masa Kerja</th><th>Aksi</th></tr>
           </thead>
           <tbody>
-            {karyawan.length === 0 ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>Tidak ada data karyawan</td></tr>
-            ) : karyawan.map((k, i) => (
+            {karyawanData.length === 0 ? (
+              <tr><td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>Tidak ada data karyawan</td></tr>
+            ) : karyawanData.map((k, i) => (
               <tr key={k.id_karyawan}>
                 <td style={{ color: '#9ca3af' }}>{i+1}</td>
                 <td><div style={{ fontWeight: 600 }}>{k.nama}</div><div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{k.id_karyawan}</div></td>
                 <td>{k.username}</td>
+                <td>{renderPassword(k)}</td>
                 <td><span className="badge badge-jabatan">{k.jabatan || '-'}</span></td>
                 <td>{k.jenkel}</td>
                 <td>{k.no_tel}</td>
@@ -95,8 +159,9 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
                 <td>{k.masa_kerja}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '4px' }}>
-                    <button className="btn btn-outline btn-sm" onClick={() => openEdit(k)}><i className="fas fa-pen" /></button>
-                    <button className="btn btn-danger btn-sm" onClick={() => openDelete(k)}><i className="fas fa-trash" /></button>
+                    <button className="btn btn-outline btn-sm" title="Edit" onClick={() => openEdit(k)}><i className="fas fa-pen" /></button>
+                    <button className="btn btn-warning btn-sm" title="Ganti Password" onClick={() => openChangePw(k)}><i className="fas fa-key" /></button>
+                    <button className="btn btn-danger btn-sm" title="Hapus" onClick={() => openDelete(k)}><i className="fas fa-trash" /></button>
                   </div>
                 </td>
               </tr>
@@ -191,6 +256,57 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
               <button className="btn btn-outline btn-sm" onClick={() => setShowModal(null)}>Batal</button>
               <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={loading}>{loading ? 'Menghapus...' : 'Ya, Hapus'}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {changePwTarget && (
+        <div className="modal-backdrop" onClick={() => setChangePwTarget(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+                <i className="fas fa-key" style={{ marginRight: '6px', color: '#7e22ce' }} />
+                Ganti Password: <span style={{ color: '#4f46e5' }}>{changePwTarget.nama}</span>
+              </h3>
+              <button onClick={() => setChangePwTarget(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
+            </div>
+            <form onSubmit={handleChangePassword}>
+              <div className="modal-body">
+                {changePwMsg && (
+                  <div className={`alert ${changePwMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '12px' }}>
+                    <i className={`fas ${changePwMsg.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} /> {changePwMsg.text}
+                  </div>
+                )}
+                <div>
+                  <label className="form-label">Password Baru *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showNewPass ? 'text' : 'password'}
+                      className="form-control"
+                      placeholder="Masukkan password baru"
+                      value={newPass}
+                      onChange={e => setNewPass(e.target.value)}
+                      required minLength={3}
+                      style={{ paddingRight: '40px' }}
+                    />
+                    <button type="button" onClick={() => setShowNewPass(v => !v)}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: '4px' }}>
+                      <i className={`fas ${showNewPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
+                  </div>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>
+                    Password disimpan sebagai teks biasa dan dapat dilihat oleh Owner.
+                  </p>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setChangePwTarget(null)}>Batal</button>
+                <button type="submit" className="btn btn-owner btn-sm" disabled={changePwLoading || !newPass.trim()}>
+                  {changePwLoading ? <><i className="fas fa-spinner fa-spin" /> Menyimpan...</> : <><i className="fas fa-save" /> Simpan</>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

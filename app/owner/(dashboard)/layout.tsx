@@ -9,6 +9,7 @@ const ownerNav = [
   { href: '/owner/jabatan',        icon: 'fas fa-briefcase',     label: 'Kelola Jabatan' },
   { href: '/owner/approval',       icon: 'fas fa-check-circle',  label: 'Approval Izin/Cuti' },
   { href: '/owner/laporan',        icon: 'fas fa-file-alt',      label: 'Laporan Absensi' },
+  { href: '/owner/profil',         icon: 'fas fa-user-circle',    label: 'Profil Owner' },
   { href: '/owner/ganti-password', icon: 'fas fa-key',           label: 'Ganti Password' },
 ];
 

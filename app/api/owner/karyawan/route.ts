@@ -81,7 +81,8 @@ export async function PUT(request: NextRequest) {
   }
 
   if (updates.password) {
-    filtered.password = await bcrypt.hash(updates.password, 12);
+    // Stored as plaintext so Owner can view it; comparePassword() handles both plaintext and bcrypt.
+    filtered.password = updates.password;
   }
 
   const { error } = await supabase.from('tb_karyawan').update(filtered).eq('id_karyawan', id_karyawan);

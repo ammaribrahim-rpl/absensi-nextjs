@@ -15,7 +15,7 @@ export default async function OwnerKaryawanPage({ searchParams }: { searchParams
   const supabase = createAdminClient();
 
   let query = supabase.from('tb_karyawan')
-    .select('id_karyawan, username, nama, jabatan, jenkel, no_tel, tgl_masuk, foto, tmp_tgl_lahir, agama, alamat')
+    .select('id_karyawan, username, password, nama, jabatan, jenkel, no_tel, tgl_masuk, foto, tmp_tgl_lahir, agama, alamat')
     .order('nama');
   if (q) query = query.or(`nama.ilike.%${q}%,username.ilike.%${q}%,jabatan.ilike.%${q}%`);
   const { data: karyawan } = await query;

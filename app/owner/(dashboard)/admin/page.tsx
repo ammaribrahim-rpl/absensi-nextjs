@@ -10,6 +10,6 @@ export default async function OwnerAdminPage() {
   const session = await getSession();
   if (!session || session.role !== 'owner') redirect('/owner/login');
   const supabase = createAdminClient();
-  const { data } = await supabase.from('tb_daftar').select('id, username, created_at').order('id');
+  const { data } = await supabase.from('tb_daftar').select('id, username, password, created_at').order('id');
   return <AdminManageClient admins={data ?? []} />;
 }
