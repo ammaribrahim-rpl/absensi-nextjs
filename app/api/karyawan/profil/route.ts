@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession, setSessionCookie } from '@/lib/auth/session';
 import { comparePassword, hashPassword } from '@/lib/auth/bcrypt';
+import type { Karyawan } from '@/types/database';
 
 export async function PUT(request: NextRequest) {
   const session = await getSession();
@@ -32,10 +33,11 @@ export async function PUT(request: NextRequest) {
   }
 
   // Update profil biasa
-  const update: Record<string, string> = {};
-  if (body?.alamat !== undefined) update.alamat = body.alamat;
-  if (body?.no_tel !== undefined) update.no_tel = body.no_tel;
-  if (body?.agama !== undefined)  update.agama  = body.agama;
+  const allowed = ['alamat', 'no_tel', 'agama'] as const;
+  const update: Partial<Karyawan> = {};
+  for (const key of allowed) {
+    if (body?.[key] !== undefined) (update as Record<string, string>)[key] = body[key];
+  }
 
   if (Object.keys(update).length === 0)
     return NextResponse.json({ error: 'Tidak ada data yang diubah.' }, { status: 400 });

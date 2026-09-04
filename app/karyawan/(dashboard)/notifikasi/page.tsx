@@ -19,7 +19,7 @@ export default async function NotifikasiPage() {
 
   const { data: notifikasi } = await supabase
     .from('tb_notifikasi')
-    .select('id, pesan, tipe, dibaca, created_at')
+    .select('id, id_karyawan, nama, pesan, tipe, dibaca, created_at')
     .eq('id_karyawan', k.id_karyawan)
     .order('created_at', { ascending: false })
     .limit(30);

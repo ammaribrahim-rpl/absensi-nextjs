@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession } from '@/lib/auth/session';
+import type { StatusKeterangan } from '@/types/database';
 
 async function checkOwner() {
   const s = await getSession();
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get('status') ?? 'Proses';
   const { data } = await supabase
     .from('tb_keterangan').select('*')
-    .eq('status', status)
+    .eq('status', status as StatusKeterangan)
     .order('waktu', { ascending: false });
   return NextResponse.json({ data: data ?? [] });
 }
@@ -38,7 +39,7 @@ export async function PUT(request: NextRequest) {
   const pesan = status === 'Disetujui'
     ? `Pengajuan ${ket.keterangan} Anda telah DISETUJUI oleh Owner.`
     : `Pengajuan ${ket.keterangan} Anda DITOLAK oleh Owner.`;
-  await supabase.from('tb_notifikasi').insert({ id_karyawan: ket.id_karyawan, nama: ket.nama, pesan, tipe: tipeNotif });
+  await supabase.from('tb_notifikasi').insert({ id_karyawan: ket.id_karyawan, nama: ket.nama, pesan, tipe: tipeNotif, dibaca: 0 });
 
   return NextResponse.json({ success: true });
 }

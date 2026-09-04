@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
   const k = session as Extract<typeof session, { role: 'karyawan' }>;
 
   const body = await request.json().catch(() => null);
-  const tipe = (body?.tipe_absen ?? '') as TipeAbsen;
+  const tipeRaw = (body?.tipe_absen ?? '') as string;
+  const tipe = tipeRaw as TipeAbsen;
 
   const validTipe: TipeAbsen[] = ['masuk', 'istirahat_mulai', 'istirahat_selesai', 'pulang'];
-  if (!validTipe.includes(tipe) && tipe !== 'reset_test') {
+  if (!validTipe.includes(tipe as TipeAbsen) && tipeRaw !== 'reset_test') {
     return NextResponse.json({ error: 'Tipe absen tidak valid.' }, { status: 400 });
   }
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
   const isOperator = k.jabatan.toUpperCase() === 'OPERATOR';
 
   // ─── Reset Testing (khusus OPERATOR) ─────────────────────────────────────
-  if (tipe === 'reset_test' && isOperator) {
+  if (tipeRaw === 'reset_test' && isOperator) {
     await supabase
       .from('tb_absen')
       .delete()
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
       nama: k.nama,
       pesan: pesanNotif,
       tipe: tipeNotif,
+      dibaca: 0,
     });
   }
 

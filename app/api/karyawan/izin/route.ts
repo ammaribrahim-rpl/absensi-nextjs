@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     tgl_mulai: tglMulai || null,
     tgl_selesai: tglSelesai || null,
     alasan,
+    waktu: new Date().toISOString(),
     bukti: '',
     status: 'Proses',
   });
