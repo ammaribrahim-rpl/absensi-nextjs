@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ProfilPage() {
   const session = await getSession();
-  if (!session || session.role !== 'karyawan') redirect('/karyawan/login');
+  if (!session || session.role !== 'karyawan') redirect('/login');
   const k = session as Extract<typeof session, { role: 'karyawan' }>;
   const tglMasukFormatted = getFormattedTglMasuk(k.tgl_masuk ?? '', k.id_karyawan);
   const masaKerja = hitungMasaKerja(k.tgl_masuk ?? '', k.id_karyawan);

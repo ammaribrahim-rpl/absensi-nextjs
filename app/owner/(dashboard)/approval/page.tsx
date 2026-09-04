@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ApprovalPage({ searchParams }: { searchParams: Promise<Record<string,string>> }) {
   const session = await getSession();
-  if (!session || session.role !== 'owner') redirect('/owner/login');
+  if (!session || session.role !== 'owner') redirect('/login');
   const sp = await searchParams;
   const statusFilter = (sp.status ?? 'Proses') as 'Proses' | 'Disetujui' | 'Ditolak';
   const supabase = createAdminClient();

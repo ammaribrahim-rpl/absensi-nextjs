@@ -4,13 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const role = body?.role;
+  let role = body?.role;
   const username = (body?.username ?? '').trim();
   const alasan = (body?.alasan ?? '').trim();
 
-  if (!role || !username) {
+  if (!username) {
     return NextResponse.json(
-      { error: 'Role dan username wajib diisi.' },
+      { error: 'Username wajib diisi.' },
       { status: 400 }
     );
   }
@@ -19,7 +19,37 @@ export async function POST(request: NextRequest) {
   let idTarget = '';
   let namaTarget = '';
 
-  if (role === 'karyawan') {
+  if (!role) {
+    // Auto-detect role: check karyawan first, then admin
+    const { data: k } = await supabase
+      .from('tb_karyawan')
+      .select('id_karyawan, username, nama')
+      .eq('username', username)
+      .single();
+
+    if (k) {
+      role = 'karyawan';
+      idTarget = k.id_karyawan;
+      namaTarget = k.nama || k.username;
+    } else {
+      const { data: a } = await supabase
+        .from('tb_daftar')
+        .select('id, username')
+        .eq('username', username)
+        .single();
+
+      if (a) {
+        role = 'admin';
+        idTarget = `admin_${a.id}`;
+        namaTarget = `Admin ${a.username}`;
+      } else {
+        return NextResponse.json(
+          { error: `Akun dengan username "${username}" tidak ditemukan.` },
+          { status: 404 }
+        );
+      }
+    }
+  } else if (role === 'karyawan') {
     const { data: k, error } = await supabase
       .from('tb_karyawan')
       .select('id_karyawan, username, nama')

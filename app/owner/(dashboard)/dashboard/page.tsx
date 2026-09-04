@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function OwnerDashboardPage({ searchParams }: { searchParams: Promise<Record<string,string>> }) {
   const session = await getSession();
-  if (!session || session.role !== 'owner') redirect('/owner/login');
+  if (!session || session.role !== 'owner') redirect('/login');
   const owner = session as Extract<typeof session, { role: 'owner' }>;
   const sp = await searchParams;
   const periode = sp.periode ?? 'semua';

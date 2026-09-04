@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function IzinPage() {
   const session = await getSession();
-  if (!session || session.role !== 'karyawan') redirect('/karyawan/login');
+  if (!session || session.role !== 'karyawan') redirect('/login');
   const k = session as Extract<typeof session, { role: 'karyawan' }>;
   const supabase = createAdminClient();
 

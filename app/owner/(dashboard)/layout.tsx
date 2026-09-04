@@ -14,7 +14,7 @@ const ownerNav = [
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
-  if (!session || session.role !== 'owner') redirect('/owner/login');
+  if (!session || session.role !== 'owner') redirect('/login');
   const ownerSession = session as Extract<typeof session, { role: 'owner' }>;
 
   return (

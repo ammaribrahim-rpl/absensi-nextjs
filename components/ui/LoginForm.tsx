@@ -1,92 +1,14 @@
 'use client';
-// components/ui/LoginForm.tsx — Unified & reusable login form component with role tabs, show/hide password and forgot password modal
+// components/ui/LoginForm.tsx — 1 Unified Login Form for all roles (Owner, Admin, Karyawan)
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-export type RoleType = 'karyawan' | 'admin' | 'owner';
-
 interface LoginFormProps {
-  role?: RoleType;
-  initialRole?: RoleType;
-  allowRoleSwitch?: boolean;
-  title?: string;
-  subtitle?: string;
-  iconClass?: string;
-  iconColor?: string;
-  apiEndpoint?: string;
-  redirectTo?: string;
-  accentColor?: string;
   backHref?: string;
 }
 
-const ROLE_CONFIG: Record<RoleType, {
-  title: string;
-  subtitle: string;
-  iconClass: string;
-  iconColor: string;
-  apiEndpoint: string;
-  redirectTo: string;
-  accentColor: string;
-  label: string;
-}> = {
-  karyawan: {
-    title: 'Portal Karyawan',
-    subtitle: 'Masuk sebagai Karyawan',
-    iconClass: 'fas fa-users',
-    iconColor: '#4f46e5',
-    apiEndpoint: '/api/auth/karyawan',
-    redirectTo: '/karyawan/dashboard',
-    accentColor: '#4f46e5',
-    label: 'Karyawan',
-  },
-  admin: {
-    title: 'Administrator',
-    subtitle: 'Masuk sebagai Administrator',
-    iconClass: 'fas fa-user-shield',
-    iconColor: '#2563eb',
-    apiEndpoint: '/api/auth/admin',
-    redirectTo: '/admin/dashboard',
-    accentColor: '#2563eb',
-    label: 'Admin',
-  },
-  owner: {
-    title: 'Owner Executive',
-    subtitle: 'Portal Login Owner Executive',
-    iconClass: 'fas fa-crown',
-    iconColor: '#7e22ce',
-    apiEndpoint: '/api/auth/owner',
-    redirectTo: '/owner/dashboard',
-    accentColor: '#7e22ce',
-    label: 'Owner',
-  },
-};
-
-export default function LoginForm({
-  role,
-  initialRole,
-  allowRoleSwitch,
-  title,
-  subtitle,
-  iconClass,
-  iconColor,
-  apiEndpoint,
-  accentColor,
-  backHref = '/',
-}: LoginFormProps) {
+export default function LoginForm({ backHref = '/' }: LoginFormProps) {
   const router = useRouter();
-
-  // If role is provided and allowRoleSwitch is not explicitly true, default to false
-  const canSwitch = allowRoleSwitch ?? (role ? false : true);
-  const [activeRole, setActiveRole] = useState<RoleType>(role || initialRole || 'karyawan');
-
-  const config = ROLE_CONFIG[activeRole];
-  const effectiveAccent = accentColor || config.accentColor;
-  const effectiveEndpoint = (canSwitch && !apiEndpoint) ? config.apiEndpoint : (apiEndpoint || config.apiEndpoint);
-  const effectiveTitle = title || config.title;
-  const effectiveSubtitle = subtitle || config.subtitle;
-  const effectiveIcon = iconClass || config.iconClass;
-  const effectiveIconColor = iconColor || config.iconColor;
-
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -104,11 +26,11 @@ export default function LoginForm({
     setLoading(true);
 
     const fd = new FormData(e.currentTarget);
-    const username = fd.get('username') as string;
-    const password = fd.get('password') as string;
+    const username = (fd.get('username') as string)?.trim();
+    const password = (fd.get('password') as string)?.trim();
 
     try {
-      const res = await fetch(effectiveEndpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -119,10 +41,10 @@ export default function LoginForm({
         setError(data.error ?? 'Login gagal. Periksa username dan password.');
         return;
       }
-      router.push(data.redirect || config.redirectTo);
+      router.push(data.redirect);
       router.refresh();
     } catch {
-      setError('Terjadi kesalahan. Periksa koneksi internet Anda.');
+      setError('Terjadi kesalahan jaringan. Periksa koneksi internet Anda.');
     } finally {
       setLoading(false);
     }
@@ -138,7 +60,6 @@ export default function LoginForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          role: activeRole,
           username: forgotUsername.trim(),
           alasan: forgotAlasan.trim(),
         }),
@@ -161,74 +82,28 @@ export default function LoginForm({
   return (
     <div className="login-wrapper">
       <div className="login-card">
-        {/* Role Selector Tabs (if allowRoleSwitch is true) */}
-        {canSwitch && (
-          <div
-            style={{
-              display: 'flex',
-              background: '#f1f5f9',
-              padding: '4px',
-              borderRadius: '12px',
-              marginBottom: '22px',
-              gap: '4px',
-            }}
-          >
-            {(['karyawan', 'admin', 'owner'] as RoleType[]).map((r) => {
-              const cfg = ROLE_CONFIG[r];
-              const active = activeRole === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => {
-                    setActiveRole(r);
-                    setError('');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '8px 10px',
-                    border: 'none',
-                    borderRadius: '8px',
-                    background: active ? '#fff' : 'transparent',
-                    color: active ? cfg.accentColor : '#64748b',
-                    fontWeight: active ? 700 : 500,
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <i className={cfg.iconClass} style={{ fontSize: '0.8rem' }} />
-                  {cfg.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Brand Icon */}
+        {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
               width: '64px',
               height: '64px',
               borderRadius: '18px',
-              background: `${effectiveAccent}18`,
+              background: 'rgba(99, 102, 241, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              transition: 'background 0.2s',
             }}
           >
-            <i className={effectiveIcon} style={{ fontSize: '1.8rem', color: effectiveIconColor }} />
+            <i className="fas fa-fingerprint" style={{ fontSize: '1.9rem', color: '#4f46e5' }} />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: '#111827' }}>ABSENSI</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>{effectiveSubtitle}</p>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 6px', color: '#111827', letterSpacing: '-0.02em' }}>
+            ABSENSI
+          </h1>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+            Sistem Manajemen Presensi Terintegrasi
+          </p>
         </div>
 
         {/* Error Alert */}
@@ -239,18 +114,18 @@ export default function LoginForm({
           </div>
         )}
 
-        {/* Form */}
+        {/* Unified Login Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label className="form-label" htmlFor={`${activeRole}-username`}>
-              <i className="fas fa-user" style={{ marginRight: '4px' }} /> Username
+            <label className="form-label" htmlFor="login-username">
+              <i className="fas fa-user" style={{ marginRight: '6px', color: '#6366f1' }} /> Username
             </label>
             <input
-              id={`${activeRole}-username`}
+              id="login-username"
               type="text"
               name="username"
               className="form-control"
-              placeholder={`Masukkan username ${config.label.toLowerCase()}`}
+              placeholder="Masukkan username Anda"
               required
               autoFocus
               autoComplete="username"
@@ -259,16 +134,16 @@ export default function LoginForm({
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label className="form-label" htmlFor={`${activeRole}-password`}>
-              <i className="fas fa-lock" style={{ marginRight: '4px' }} /> Password
+            <label className="form-label" htmlFor="login-password">
+              <i className="fas fa-lock" style={{ marginRight: '6px', color: '#6366f1' }} /> Password
             </label>
             <div style={{ position: 'relative' }}>
               <input
-                id={`${activeRole}-password`}
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 className="form-control"
-                placeholder="Masukkan password"
+                placeholder="Masukkan password Anda"
                 required
                 autoComplete="current-password"
                 style={{ paddingRight: '42px' }}
@@ -294,42 +169,49 @@ export default function LoginForm({
               </button>
             </div>
 
-            {/* Forgot Password Trigger (for Admin & Karyawan) */}
-            {activeRole !== 'owner' && (
-              <div style={{ textAlign: 'right', marginTop: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForgot(true);
-                    setForgotMsg(null);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: effectiveAccent,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    padding: 0,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Lupa Password?
-                </button>
-              </div>
-            )}
+            {/* Forgot Password Link */}
+            <div style={{ textAlign: 'right', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgot(true);
+                  setForgotMsg(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#4f46e5',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  padding: 0,
+                  textDecoration: 'underline',
+                }}
+              >
+                Lupa Password?
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             className="btn btn-block"
             disabled={loading}
-            style={{ background: effectiveAccent, color: '#fff', fontWeight: 700, padding: '12px', fontSize: '0.95rem', marginTop: '8px', transition: 'background 0.2s' }}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              color: '#fff',
+              fontWeight: 700,
+              padding: '13px',
+              fontSize: '0.95rem',
+              marginTop: '10px',
+              border: 'none',
+              boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
+            }}
           >
             {loading ? (
-              <><i className="fas fa-spinner fa-spin" /> Memproses...</>
+              <><i className="fas fa-spinner fa-spin" /> Memeriksa akun...</>
             ) : (
-              <><i className="fas fa-sign-in-alt" /> Masuk ke {effectiveTitle}</>
+              <><i className="fas fa-sign-in-alt" /> Masuk ke Sistem</>
             )}
           </button>
         </form>
@@ -342,7 +224,7 @@ export default function LoginForm({
             gap: '10px',
             color: '#9ca3af',
             fontSize: '0.75rem',
-            margin: '20px 0',
+            margin: '22px 0 16px',
           }}
         >
           <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
@@ -351,7 +233,7 @@ export default function LoginForm({
         </div>
         <div style={{ textAlign: 'center' }}>
           <a href={backHref} style={{ fontSize: '0.82rem', color: '#6b7280', textDecoration: 'none' }}>
-            <i className="fas fa-arrow-left" style={{ marginRight: '4px' }} />
+            <i className="fas fa-arrow-left" style={{ marginRight: '5px' }} />
             Kembali ke Beranda
           </a>
         </div>
@@ -360,11 +242,11 @@ export default function LoginForm({
       {/* ── Modal Lupa Password ── */}
       {showForgot && (
         <div className="modal-backdrop" onClick={() => setShowForgot(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="modal-header">
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <i className="fas fa-question-circle" style={{ color: effectiveAccent }} />
-                Permintaan Reset Password ({config.label})
+                <i className="fas fa-question-circle" style={{ color: '#4f46e5' }} />
+                Permintaan Reset Password
               </h3>
               <button
                 type="button"
@@ -377,7 +259,7 @@ export default function LoginForm({
 
             <form onSubmit={handleForgotSubmit}>
               <div className="modal-body">
-                <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: '#6b7280', lineHeight: 1.4 }}>
+                <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: '#6b7280', lineHeight: 1.45 }}>
                   Kirimkan permintaan reset password ke <strong>Owner</strong>. Owner akan menerima notifikasi dan dapat mereset password akun Anda secara langsung.
                 </p>
 
@@ -392,11 +274,11 @@ export default function LoginForm({
                 )}
 
                 <div style={{ marginBottom: '14px' }}>
-                  <label className="form-label">Username Akun ({config.label})</label>
+                  <label className="form-label">Username Akun *</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Contoh: user / ammar / admin"
+                    placeholder="Masukkan username Anda"
                     value={forgotUsername}
                     onChange={(e) => setForgotUsername(e.target.value)}
                     required
@@ -408,7 +290,7 @@ export default function LoginForm({
                   <textarea
                     className="form-control"
                     rows={3}
-                    placeholder="Contoh: Saya lupa password login akun saya, mohon bantuannya..."
+                    placeholder="Contoh: Lupa password akun saya, mohon bantuannya..."
                     value={forgotAlasan}
                     onChange={(e) => setForgotAlasan(e.target.value)}
                   />
@@ -427,7 +309,7 @@ export default function LoginForm({
                   type="submit"
                   className="btn btn-sm"
                   disabled={forgotLoading || !forgotUsername.trim()}
-                  style={{ background: effectiveAccent, color: '#fff', fontWeight: 600 }}
+                  style={{ background: '#4f46e5', color: '#fff', fontWeight: 600 }}
                 >
                   {forgotLoading ? (
                     <><i className="fas fa-spinner fa-spin" /> Mengirim...</>

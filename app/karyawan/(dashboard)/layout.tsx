@@ -11,7 +11,7 @@ const karyawanNav = [
 
 export default async function KaryawanLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
-  if (!session || session.role !== 'karyawan') redirect('/karyawan/login');
+  if (!session || session.role !== 'karyawan') redirect('/login');
   const k = session as Extract<typeof session, { role: 'karyawan' }>;
 
   return (

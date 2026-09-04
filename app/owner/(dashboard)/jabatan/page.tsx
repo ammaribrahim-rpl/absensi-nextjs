@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function JabatanPage() {
   const session = await getSession();
-  if (!session || session.role !== 'owner') redirect('/owner/login');
+  if (!session || session.role !== 'owner') redirect('/login');
   const supabase = createAdminClient();
   const { data } = await supabase.from('tb_jabatan').select('*').order('jabatan');
   return <JabatanClient jabatan={data ?? []} />;
