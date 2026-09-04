@@ -4,29 +4,29 @@ export type TipeAbsen = 'masuk' | 'istirahat_mulai' | 'istirahat_selesai' | 'pul
 export type StatusKeterangan = 'Proses' | 'Disetujui' | 'Ditolak';
 export type TipeNotifikasi = 'telat_masuk' | 'telat_istirahat' | 'approval' | 'penolakan' | 'info';
 
-export interface Jabatan {
+export type Jabatan = {
   id: number;
   jabatan: string;
   icon: string;
   created_at: string;
-}
+};
 
-export interface Owner {
+export type Owner = {
   id: number;
   username: string;
   password: string;
   nama: string;
   created_at: string;
-}
+};
 
-export interface Admin {
+export type Admin = {
   id: number;
   username: string;
   password: string;
   created_at: string;
-}
+};
 
-export interface Karyawan {
+export type Karyawan = {
   id_karyawan: string;
   username: string;
   password: string;
@@ -40,9 +40,9 @@ export interface Karyawan {
   foto: string;
   tgl_masuk: string | null;
   created_at: string;
-}
+};
 
-export interface Absen {
+export type Absen = {
   id: number;
   id_karyawan: string;
   nama: string;
@@ -52,9 +52,9 @@ export interface Absen {
   is_telat: number;
   durasi_istirahat: number | null;
   created_at: string;
-}
+};
 
-export interface Keterangan {
+export type Keterangan = {
   id: number;
   id_karyawan: string;
   nama: string;
@@ -66,9 +66,9 @@ export interface Keterangan {
   bukti: string;
   status: StatusKeterangan;
   created_at: string;
-}
+};
 
-export interface Notifikasi {
+export type Notifikasi = {
   id: number;
   id_karyawan: string;
   nama: string;
@@ -76,19 +76,67 @@ export interface Notifikasi {
   tipe: TipeNotifikasi | string;
   dibaca: number;
   created_at: string;
-}
+};
 
 // Supabase Database type map
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      tb_jabatan:    { Row: Jabatan; Insert: Omit<Jabatan, 'id' | 'created_at'>; Update: Partial<Omit<Jabatan, 'id'>>; };
-      tb_owner:      { Row: Owner; Insert: Omit<Owner, 'id' | 'created_at'>; Update: Partial<Omit<Owner, 'id'>>; };
-      tb_daftar:     { Row: Admin; Insert: Omit<Admin, 'id' | 'created_at'>; Update: Partial<Omit<Admin, 'id'>>; };
-      tb_karyawan:   { Row: Karyawan; Insert: Omit<Karyawan, 'created_at'>; Update: Partial<Karyawan>; };
-      tb_absen:      { Row: Absen; Insert: Omit<Absen, 'id' | 'created_at'>; Update: Partial<Omit<Absen, 'id'>>; };
-      tb_keterangan: { Row: Keterangan; Insert: Omit<Keterangan, 'id' | 'created_at'>; Update: Partial<Omit<Keterangan, 'id'>>; };
-      tb_notifikasi: { Row: Notifikasi; Insert: Omit<Notifikasi, 'id' | 'created_at'>; Update: Partial<Omit<Notifikasi, 'id'>>; };
+      tb_jabatan: {
+        Row: Jabatan;
+        Insert: Omit<Jabatan, 'id' | 'created_at'>;
+        Update: Partial<Omit<Jabatan, 'id'>>;
+        Relationships: [];
+      };
+      tb_owner: {
+        Row: Owner;
+        Insert: Omit<Owner, 'id' | 'created_at'>;
+        Update: Partial<Omit<Owner, 'id'>>;
+        Relationships: [];
+      };
+      tb_daftar: {
+        Row: Admin;
+        Insert: Omit<Admin, 'id' | 'created_at'>;
+        Update: Partial<Omit<Admin, 'id'>>;
+        Relationships: [];
+      };
+      tb_karyawan: {
+        Row: Karyawan;
+        Insert: Omit<Karyawan, 'created_at'>;
+        Update: Partial<Karyawan>;
+        Relationships: [];
+      };
+      tb_absen: {
+        Row: Absen;
+        Insert: Omit<Absen, 'id' | 'created_at'>;
+        Update: Partial<Omit<Absen, 'id'>>;
+        Relationships: [];
+      };
+      tb_keterangan: {
+        Row: Keterangan;
+        Insert: Omit<Keterangan, 'id' | 'created_at'>;
+        Update: Partial<Omit<Keterangan, 'id'>>;
+        Relationships: [];
+      };
+      tb_notifikasi: {
+        Row: Notifikasi;
+        Insert: Omit<Notifikasi, 'id' | 'created_at'>;
+        Update: Partial<Omit<Notifikasi, 'id'>>;
+        Relationships: [];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
-}
+};
+

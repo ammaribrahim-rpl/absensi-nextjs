@@ -1,3 +1,4 @@
+// app/api/auth/karyawan/route.ts — Login karyawan
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { setSessionCookie } from '@/lib/auth/session';

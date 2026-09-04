@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession } from '@/lib/auth/session';
 import bcrypt from 'bcryptjs';
 import { generateBaseIdKaryawan } from '@/lib/utils/absensi';
+import type { Karyawan } from '@/types/database';
 
 async function checkOwnerOrAdmin() {
   const s = await getSession();
@@ -71,9 +72,13 @@ export async function PUT(request: NextRequest) {
   if (!id_karyawan) return NextResponse.json({ error: 'ID karyawan diperlukan.' }, { status: 400 });
 
   const supabase = createAdminClient();
-  const allowed = ['nama','jabatan','jenkel','agama','alamat','no_tel','tmp_tgl_lahir','tgl_masuk','username'];
-  const filtered: Record<string, unknown> = {};
-  for (const key of allowed) { if (updates[key] !== undefined) filtered[key] = updates[key]; }
+  const allowed = ['nama','jabatan','jenkel','agama','alamat','no_tel','tmp_tgl_lahir','tgl_masuk','username'] as const;
+  const filtered: Partial<Karyawan> = {};
+  for (const key of allowed) {
+    if (updates[key] !== undefined) {
+      filtered[key] = updates[key];
+    }
+  }
 
   if (updates.password) {
     filtered.password = await bcrypt.hash(updates.password, 12);
