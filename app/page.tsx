@@ -1,69 +1,87 @@
-import Image from "next/image";
+// app/page.tsx — Landing Page: pilih portal (Owner / Admin / Karyawan)
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: 'Absensi — Portal Login System',
+  description: 'Pilih portal login sesuai role Anda: Owner, Administrator, atau Karyawan.',
+};
+
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #170d2b 0%, #2e1065 40%, #1e1b4b 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '24px',
+    }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.07)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        borderRadius: '18px',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        padding: '44px 36px',
+        textAlign: 'center',
+        maxWidth: '410px', width: '100%',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+      }}>
+        {/* Icon */}
+        <div style={{ fontSize: '2.6rem', color: '#818cf8', marginBottom: '12px' }}>
+          <i className="fas fa-fingerprint" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Title */}
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '0.05em', color: '#fff', margin: '0 0 4px' }}>
+          ABSENSI
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.88rem', margin: '0 0 32px' }}>
+          Sistem Manajemen Presensi Terintegrasi
+        </p>
+
+        {/* Portal Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Link href="/owner/login" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
+            background: 'linear-gradient(135deg, #7e22ce, #6b21a8)',
+            color: '#fff', border: '1px solid #a855f7',
+            boxShadow: '0 4px 14px rgba(126,34,206,0.35)',
+            fontWeight: 700, fontSize: '0.9rem', transition: 'opacity 0.2s',
+          }}>
+            <i className="fas fa-crown" style={{ color: '#facc15' }} />
+            Login Owner
+          </Link>
+
+          <Link href="/login" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
+            background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
+            color: '#fff', border: '1px solid #6366f1',
+            boxShadow: '0 4px 14px rgba(79,70,229,0.35)',
+            fontWeight: 700, fontSize: '0.9rem',
+          }}>
+            <i className="fas fa-user-shield" style={{ color: '#a5b4fc' }} />
+            Login Administrator
+          </Link>
+
+          <Link href="/karyawan/login" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            padding: '13px 20px', borderRadius: '10px', textDecoration: 'none',
+            background: '#fff', color: '#1e1b4b',
+            border: '1px solid #fff',
+            boxShadow: '0 4px 14px rgba(255,255,255,0.2)',
+            fontWeight: 700, fontSize: '0.9rem',
+          }}>
+            <i className="fas fa-users" style={{ color: '#7e22ce' }} />
+            Login Karyawan
+          </Link>
         </div>
-      </main>
-    </div>
+
+        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', marginTop: '24px', marginBottom: 0 }}>
+          © 2024 Absensi Management System
+        </p>
+      </div>
+    </main>
   );
 }
