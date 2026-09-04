@@ -15,10 +15,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Tidak ada created_at di MySQL asli — kita tambahkan untuk Supabase
 CREATE TABLE IF NOT EXISTS tb_jabatan (
     id      SERIAL PRIMARY KEY,
-    jabatan VARCHAR(255) NOT NULL,
+    jabatan VARCHAR(255) NOT NULL UNIQUE,
     icon    VARCHAR(50)  NOT NULL DEFAULT 'fas fa-briefcase',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_jabatan_unique ON tb_jabatan(jabatan);
+
 
 -- ─── tb_owner ────────────────────────────────────────────────────────────────
 -- MySQL: id, username, password, nama (tidak ada created_at)
