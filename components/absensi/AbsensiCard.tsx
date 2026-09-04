@@ -219,8 +219,8 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
         <div style={{ fontSize: '0.78rem', opacity: 0.7, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Waktu Sekarang (WIB)
         </div>
-        <div style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1 }}>{jam}</div>
-        <div style={{ fontSize: '0.78rem', opacity: 0.6, marginTop: '4px' }}>
+        <div style={{ fontSize: 'clamp(2.1rem, 8vw, 2.8rem)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1 }}>{jam}</div>
+        <div style={{ fontSize: '0.78rem', opacity: 0.7, marginTop: '6px', wordBreak: 'break-word' }}>
           Masa Kerja: <strong>{masaKerja}</strong> &middot; Bergabung: {tglMasukFormatted}
         </div>
       </div>

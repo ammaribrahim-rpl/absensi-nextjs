@@ -1,5 +1,5 @@
 'use client';
-// components/layout/Sidebar.tsx — Reusable sidebar with mobile toggle
+// components/layout/Sidebar.tsx — Modern responsive sidebar, mobile header, and bottom navigation
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -21,25 +21,45 @@ interface SidebarProps {
   badgeColor?: string;
 }
 
-export default function Sidebar({ logoText, logoIcon, logoColor = '#c084fc', navItems, role, userName, userBadge, badgeColor = '#7e22ce' }: SidebarProps) {
+export default function Sidebar({
+  logoText,
+  logoIcon,
+  logoColor = '#c084fc',
+  navItems,
+  role,
+  userName,
+  userBadge,
+  badgeColor = '#7e22ce',
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Close on route change
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
-
-  // Close on outside click
+  // Close when pathname changes
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.sidebar') && !target.closest('.hamburger-btn')) {
-        setMobileOpen(false);
-      }
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    return () => {
+      document.body.classList.remove('sidebar-open');
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+  }, [mobileOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   async function handleLogout() {
@@ -48,83 +68,212 @@ export default function Sidebar({ logoText, logoIcon, logoColor = '#c084fc', nav
     router.push('/');
   }
 
+  // Karyawan quick navigation items for mobile bottom bar
+  const karyawanBottomItems = [
+    { href: '/karyawan/dashboard', icon: 'fas fa-fingerprint', label: 'Absen' },
+    { href: '/karyawan/izin', icon: 'fas fa-calendar-alt', label: 'Izin' },
+    { href: '/karyawan/notifikasi', icon: 'fas fa-bell', label: 'Notifikasi' },
+    { href: '/karyawan/profil', icon: 'fas fa-user-circle', label: 'Profil' },
+  ];
+
   return (
     <>
-      {/* Mobile Header Bar */}
-      <header style={{
-        display: 'none',
-        position: 'sticky', top: 0, zIndex: 50,
-        background: '#170d2b',
-        padding: '12px 16px',
-        alignItems: 'center', justifyContent: 'space-between',
-      }} className="mobile-header">
-        <Link href={navItems[0]?.href ?? '/'} style={{ color: '#fff', textDecoration: 'none', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <i className={logoIcon} style={{ color: logoColor }} />
-          {logoText}
-        </Link>
-        <button
-          className="hamburger-btn"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.3rem', cursor: 'pointer', padding: '4px 8px' }}
+      {/* ── Mobile & Tablet Header Bar (Visible on screens < 1024px) ── */}
+      <header className="mobile-header">
+        <Link
+          href={navItems[0]?.href ?? '/'}
+          style={{
+            color: '#fff',
+            textDecoration: 'none',
+            fontWeight: 800,
+            fontSize: '1.05rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
         >
-          <i className={mobileOpen ? 'fas fa-times' : 'fas fa-bars'} />
-        </button>
+          <div
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '8px',
+              background: `${logoColor}22`,
+              border: `1px solid ${logoColor}44`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <i className={logoIcon} style={{ color: logoColor, fontSize: '1.1rem' }} />
+          </div>
+          <span>{logoText}</span>
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {userBadge && (
+            <span
+              style={{
+                fontSize: '0.68rem',
+                color: '#fff',
+                fontWeight: 700,
+                background: `${badgeColor}33`,
+                border: `1px solid ${badgeColor}66`,
+                padding: '3px 8px',
+                borderRadius: '99px',
+                display: 'inline-block',
+              }}
+            >
+              {userBadge}
+            </span>
+          )}
+
+          <button
+            className="hamburger-btn"
+            type="button"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={mobileOpen}
+          >
+            <i className={mobileOpen ? 'fas fa-times' : 'fas fa-bars'} />
+          </button>
+        </div>
       </header>
 
-      {/* Sidebar */}
+      {/* ── Sidebar (Desktop Fixed Sidebar & Mobile/Tablet Slide-over Drawer) ── */}
       <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
-        {/* Logo */}
-        <Link href={navItems[0]?.href ?? '/'} className="sidebar-logo">
-          <i className={logoIcon} style={{ color: logoColor, fontSize: '1.1rem' }} />
-          {logoText}
-        </Link>
+        {/* Drawer Header with Logo & Mobile Close Button */}
+        <div className="sidebar-logo">
+          <Link
+            href={navItems[0]?.href ?? '/'}
+            style={{
+              color: '#fff',
+              textDecoration: 'none',
+              fontWeight: 800,
+              fontSize: '1.1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              flex: 1,
+            }}
+            onClick={() => setMobileOpen(false)}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: `${logoColor}25`,
+                border: `1px solid ${logoColor}55`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <i className={logoIcon} style={{ color: logoColor, fontSize: '1.05rem' }} />
+            </div>
+            <span>{logoText}</span>
+          </Link>
 
-        {/* User Info */}
+          {/* Close button for Mobile/Tablet drawer */}
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Tutup menu navigasi"
+          >
+            <i className="fas fa-times" />
+          </button>
+        </div>
+
+        {/* User Profile Card */}
         {userName && (
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="avatar avatar-sm" style={{ background: `${badgeColor}30`, color: badgeColor }}>
+              <div
+                className="avatar avatar-sm"
+                style={{
+                  background: `${badgeColor}33`,
+                  color: '#fff',
+                  border: `1px solid ${badgeColor}55`,
+                  fontWeight: 700,
+                }}
+              >
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <div style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>{userName}</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {userName}
+                </div>
                 {userBadge && (
-                  <div style={{
-                    fontSize: '0.65rem', color: badgeColor, fontWeight: 700,
-                    background: `${badgeColor}20`, padding: '1px 6px', borderRadius: '99px',
-                    border: `1px solid ${badgeColor}40`, display: 'inline-block', marginTop: '2px',
-                  }}>{userBadge}</div>
+                  <div
+                    style={{
+                      fontSize: '0.65rem',
+                      color: '#e2e8f0',
+                      fontWeight: 700,
+                      background: `${badgeColor}30`,
+                      padding: '1px 7px',
+                      borderRadius: '99px',
+                      border: `1px solid ${badgeColor}50`,
+                      display: 'inline-block',
+                      marginTop: '3px',
+                    }}
+                  >
+                    {userBadge}
+                  </div>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Nav */}
+        {/* Navigation Items */}
         <nav className="sidebar-nav" style={{ flex: 1 }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}
-            >
-              <i className={item.icon} style={{ width: '16px', textAlign: 'center' }} />
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={isActive ? 'active' : ''}
+                onClick={() => setMobileOpen(false)}
+              >
+                <i className={item.icon} style={{ width: '18px', textAlign: 'center', fontSize: '0.95rem' }} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Logout */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* Logout Button */}
+        <div style={{ padding: '14px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <button
+            type="button"
             onClick={handleLogout}
             disabled={loggingOut}
             style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              width: '100%', padding: '10px 16px',
-              background: 'rgba(220,38,38,0.15)', color: '#fca5a5',
-              border: 'none', borderRadius: '6px', cursor: 'pointer',
-              fontSize: '0.875rem', fontWeight: 500, transition: 'background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '11px 16px',
+              background: 'rgba(220,38,38,0.2)',
+              color: '#fca5a5',
+              border: '1px solid rgba(220,38,38,0.3)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              transition: 'background 0.15s, transform 0.1s',
             }}
           >
             <i className="fas fa-sign-out-alt" style={{ width: '16px' }} />
@@ -133,24 +282,33 @@ export default function Sidebar({ logoText, logoIcon, logoColor = '#c084fc', nav
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
+      {/* ── Mobile Overlay Backdrop ── */}
       {mobileOpen && (
         <div
-          onClick={() => setMobileOpen(false)}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-            zIndex: 35, display: 'none',
-          }}
           className="mobile-overlay"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      <style>{`
-        @media (max-width: 1023px) {
-          .mobile-header { display: flex !important; }
-          .mobile-overlay { display: block !important; }
-        }
-      `}</style>
+      {/* ── Karyawan Bottom Navigation Bar (Mobile < 768px) ── */}
+      {role === 'karyawan' && (
+        <nav className="mobile-bottom-nav" aria-label="Navigasi Bawah">
+          {karyawanBottomItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== '/karyawan/dashboard' && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={isActive ? 'active' : ''}
+              >
+                <i className={item.icon} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </>
   );
 }

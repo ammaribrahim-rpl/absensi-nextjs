@@ -1,10 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: { default: 'Absensi — Sistem Manajemen Presensi', template: '%s — Absensi' },
   description: 'Sistem Manajemen Presensi Terintegrasi untuk karyawan, administrator, dan owner.',
   icons: { icon: '/favicon.ico' },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
