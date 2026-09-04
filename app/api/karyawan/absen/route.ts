@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession } from '@/lib/auth/session';
 import {
   getNowJakarta, formatWaktuIndonesia, getTanggalHariIni,
-  isTelat, getDurasiIstirahat, parseWaktuToDate, TZ
+  isTelat, getDurasiIstirahat, parseWaktuToDate, getMaxIstirahat, TZ
 } from '@/lib/utils/absensi';
 import { toZonedTime } from 'date-fns-tz';
 import type { TipeAbsen } from '@/types/database';
@@ -90,7 +90,6 @@ export async function POST(request: NextRequest) {
   // ─── Simpan notifikasi internal jika telat ────────────────────────────────
   if (telat) {
     const jamStr = `${nowJakarta.getHours().toString().padStart(2,'0')}:${nowJakarta.getMinutes().toString().padStart(2,'0')} WIB`;
-    const isK1 = k.jabatan.toUpperCase() === 'K1';
     let pesanNotif = '';
     let tipeNotif = '';
 
@@ -98,7 +97,8 @@ export async function POST(request: NextRequest) {
       pesanNotif = `Kamu tercatat TERLAMBAT masuk pada ${jamStr}. Harap tepat waktu di hari berikutnya.`;
       tipeNotif = 'telat_masuk';
     } else {
-      const batasText = isK1 ? '1 jam 30 menit' : '1 jam';
+      const maxMenit = getMaxIstirahat(k.jabatan, nowJakarta);
+      const batasText = maxMenit === 90 ? '1 jam 30 menit' : '1 jam';
       pesanNotif = `Kamu melebihi batas istirahat ${batasText} (${durasiIstirahat} menit). Tercatat terlambat kembali.`;
       tipeNotif = 'telat_istirahat';
     }
@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
     masuk: 'Absen Masuk', istirahat_mulai: 'Mulai Istirahat',
     istirahat_selesai: 'Selesai Istirahat', pulang: 'Absen Pulang',
   };
-  const isK1 = k.jabatan.toUpperCase() === 'K1';
-  const batasIstLabel = isK1 ? '1 jam 30 menit' : '1 jam';
+  const maxMenit = getMaxIstirahat(k.jabatan, nowJakarta);
+  const batasIstLabel = maxMenit === 90 ? '1 jam 30 menit' : '1 jam';
   const telatMsg = telat && tipe === 'masuk'
     ? ' (Terlambat)'
     : telat && tipe === 'istirahat_selesai'

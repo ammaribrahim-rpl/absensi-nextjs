@@ -1,6 +1,6 @@
 'use client';
 // components/absensi/AbsensiCard.tsx — Core absensi UI (client component)
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Absen } from '@/types/database';
@@ -19,11 +19,35 @@ interface AbsensiCardProps {
 
 type FlashData = { success: boolean; label?: string; tipe?: string; waktu?: string; is_telat?: number; telat_msg?: string; message?: string; };
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 function parseWaktuStr(waktuStr: string | null | undefined): string {
   if (!waktuStr) return '';
   const m = waktuStr.match(/(\d{2}:\d{2}:\d{2})/);
   return m ? m[1] : '';
 }
+
+/** Batas istirahat: K2 = 90 menit, hari Jumat = 90 menit untuk semua, lainnya 60 menit */
+function getMaxIstirahatClient(jabatan: string): number {
+  const isK2 = jabatan.toUpperCase() === 'K2';
+  if (isK2) return 90;
+  const isJumat = new Date().getDay() === 5;
+  return isJumat ? 90 : 60;
+}
+
+/** Map tipe absen ke file audio */
+function getAudioFile(tipe: string, isTelat: boolean): string | null {
+  if (isTelat) return '/audio/terlambat.mp3';
+  const map: Record<string, string> = {
+    masuk: '/audio/absen_masuk.mp3',
+    istirahat_mulai: '/audio/istirahat.mp3',
+    istirahat_selesai: '/audio/absen_masuk.mp3',
+    pulang: '/audio/pulang.mp3',
+  };
+  return map[tipe] ?? null;
+}
+
+// ─── Sub Components ──────────────────────────────────────────────────────────
 
 function TimelineStep({ done, active, icon, label, time }: { done: boolean; active: boolean; icon: string; label: string; time?: string }) {
   return (
@@ -37,6 +61,8 @@ function TimelineStep({ done, active, icon, label, time }: { done: boolean; acti
   );
 }
 
+// ─── Main Component ──────────────────────────────────────────────────────────
+
 export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCount: initNotif, tglMasukFormatted, masaKerja, tanggalHari }: AbsensiCardProps) {
   const router = useRouter();
   const [absen, setAbsen] = useState<Absen[]>(initAbsen);
@@ -45,8 +71,10 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
   const [loading, setLoading] = useState<string | null>(null);
   const [jam, setJam] = useState('');
   const [countdown, setCountdown] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const warned5MinRef = useRef(false);
 
-  // Live clock
+  // ─── Live Clock ─────────────────────────────────────────────────────────
   useEffect(() => {
     function updateJam() {
       const now = new Date();
@@ -57,29 +85,46 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
     return () => clearInterval(t);
   }, []);
 
-  // Countdown istirahat
+  // ─── Fungsi putar audio ──────────────────────────────────────────────────
+  const playAudio = useCallback((src: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    audio.play().catch(() => {/* autoplay blocked — OK */});
+  }, []);
+
+  // ─── Countdown Istirahat + Peringatan Sisa 5 Menit ──────────────────────
   useEffect(() => {
     const istMulai = absen.find(a => a.tipe_absen === 'istirahat_mulai');
     const istSelesai = absen.find(a => a.tipe_absen === 'istirahat_selesai');
-    if (!istMulai || istSelesai) { setCountdown(null); return; }
+    if (!istMulai || istSelesai) { setCountdown(null); warned5MinRef.current = false; return; }
 
-    const isK1 = karyawan.jabatan.toUpperCase() === 'K1';
-    const maxMenit = isK1 ? 90 : 60;
+    const maxMenit = getMaxIstirahatClient(karyawan.jabatan);
     const mulaiTs = new Date(istMulai.waktu).getTime();
 
     function updateCountdown() {
-      const diff = Math.max(0, (mulaiTs + maxMenit * 60 * 1000) - Date.now());
-      if (diff === 0) { setCountdown('Waktu habis!'); return; }
-      const m = Math.floor(diff / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setCountdown(`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`);
+      const remaining = Math.max(0, (mulaiTs + maxMenit * 60 * 1000) - Date.now());
+
+      // Peringatan sisa 5 menit (hanya sekali)
+      if (remaining <= 5 * 60 * 1000 && remaining > 4 * 60 * 1000 && !warned5MinRef.current) {
+        warned5MinRef.current = true;
+        playAudio('/audio/sisa_5menit.mp3');
+      }
+
+      if (remaining === 0) { setCountdown('Waktu habis!'); return; }
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      setCountdown(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
     }
     updateCountdown();
     const t = setInterval(updateCountdown, 1000);
     return () => clearInterval(t);
-  }, [absen, karyawan.jabatan]);
+  }, [absen, karyawan.jabatan, playAudio]);
 
-  // Poll notif every 30s
+  // ─── Poll notif setiap 30 detik ──────────────────────────────────────────
   useEffect(() => {
     async function pollNotif() {
       const res = await fetch('/api/karyawan/notifikasi');
@@ -89,6 +134,7 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
     return () => clearInterval(t);
   }, []);
 
+  // ─── Handler Absen ───────────────────────────────────────────────────────
   async function handleAbsen(tipe: string) {
     setLoading(tipe);
     setFlash(null);
@@ -101,7 +147,15 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
       const data = await res.json();
       if (data.success) {
         setFlash(data);
-        // Refresh absen data
+
+        // ── Putar audio sesuai tipe absen ──
+        const audioFile = getAudioFile(tipe, (data.is_telat ?? 0) === 1);
+        if (audioFile) playAudio(audioFile);
+
+        // Reset flag peringatan saat mulai istirahat
+        if (tipe === 'istirahat_mulai') warned5MinRef.current = false;
+
+        // Refresh data absen
         const r2 = await fetch('/api/karyawan/absen');
         if (r2.ok) { const d2 = await r2.json(); setAbsen(d2.absen ?? []); }
         router.refresh();
@@ -115,12 +169,13 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
     }
   }
 
-  // Determine absen states
+  // ─── State Absen ─────────────────────────────────────────────────────────
   const absenMasuk       = absen.find(a => a.tipe_absen === 'masuk');
   const absenIstMulai    = absen.find(a => a.tipe_absen === 'istirahat_mulai');
   const absenIstSelesai  = absen.find(a => a.tipe_absen === 'istirahat_selesai');
   const absenPulang      = absen.find(a => a.tipe_absen === 'pulang');
   const isOperator       = karyawan.jabatan.toUpperCase() === 'OPERATOR';
+  const maxMenit         = getMaxIstirahatClient(karyawan.jabatan);
 
   // Determine current step / allowed action
   let nextAction: string | null = null;
@@ -175,7 +230,7 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
         <div className="countdown-box" style={{ marginBottom: '16px' }}>
           <div className="cd-label">Sisa Waktu Istirahat</div>
           <div className="cd-time">{countdown}</div>
-          <div className="cd-sub">{karyawan.jabatan.toUpperCase() === 'K1' ? 'Batas: 90 menit' : 'Batas: 60 menit'}</div>
+          <div className="cd-sub">Batas: {maxMenit === 90 ? '90 menit' : '60 menit'}</div>
         </div>
       )}
 

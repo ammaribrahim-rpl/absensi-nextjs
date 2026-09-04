@@ -165,6 +165,18 @@ export function generateBaseIdKaryawan(tglMasuk: Date | string): string {
   return `${day}-${mon}-${year}`;
 }
 
+// ─── getMaxIstirahat ─────────────────────────────────────────────────────────
+// Hitung batas maksimal istirahat (menit) berdasarkan jabatan dan hari
+// K2 = 90 menit, semua role = 90 menit pada hari Jumat, selainnya 60 menit
+export function getMaxIstirahat(jabatan: string, nowJakarta?: Date): number {
+  const isK2 = jabatan.toUpperCase() === 'K2';
+  if (isK2) return 90;
+
+  const now = nowJakarta ?? toZonedTime(new Date(), TZ);
+  const isJumat = now.getDay() === 5; // 5 = Friday
+  return isJumat ? 90 : 60;
+}
+
 // ─── isTelat ─────────────────────────────────────────────────────────────────
 // Cek apakah absen masuk terlambat (setelah 08:00 WIB) — kecuali OPERATOR
 export function isTelat(
@@ -184,8 +196,7 @@ export function isTelat(
   }
 
   if (tipeAbsen === 'istirahat_selesai' && durasiIstirahatMenit !== undefined) {
-    const isK1 = jabatan.toUpperCase() === 'K1';
-    const maxIstirahat = isK1 ? 90 : 60;
+    const maxIstirahat = getMaxIstirahat(jabatan, nowJakarta);
     return durasiIstirahatMenit > maxIstirahat;
   }
 
