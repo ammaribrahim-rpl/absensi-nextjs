@@ -28,19 +28,19 @@ const kategoriOpts = [
 ];
 
 function WaktuCell({ waktu }: { waktu: string }) {
-  try {
-    const d = new Date(waktu);
-    return (
-      <div>
-        <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>
-          {d.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric' })}
-        </div>
-        <div style={{ fontSize: '0.72rem', color: '#6b7280' }}>
-          {d.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })} WIB
-        </div>
+  const d = new Date(waktu);
+  if (isNaN(d.getTime())) return <span>{waktu}</span>;
+
+  return (
+    <div>
+      <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>
+        {d.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric' })}
       </div>
-    );
-  } catch { return <span>{waktu}</span>; }
+      <div style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+        {d.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })} WIB
+      </div>
+    </div>
+  );
 }
 
 export default function LaporanClient({ data, jabatanOptions, karyawanOptions, filters }: {

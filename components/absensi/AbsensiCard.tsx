@@ -100,7 +100,7 @@ export default function AbsensiCard({ karyawan, absenHariIni: initAbsen, notifCo
   useEffect(() => {
     const istMulai = absen.find(a => a.tipe_absen === 'istirahat_mulai');
     const istSelesai = absen.find(a => a.tipe_absen === 'istirahat_selesai');
-    if (!istMulai || istSelesai) { setCountdown(null); warned5MinRef.current = false; return; }
+    if (!istMulai || istSelesai) { warned5MinRef.current = false; return; }
 
     const maxMenit = getMaxIstirahatClient(karyawan.jabatan);
     const mulaiTs = new Date(istMulai.waktu).getTime();

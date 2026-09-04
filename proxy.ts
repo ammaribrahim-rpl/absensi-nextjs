@@ -26,10 +26,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Aturan proteksi per path ──────────────────────────────────────────────
-  const isOwnerPath    = pathname.startsWith('/owner') && !pathname.startsWith('/owner/login');
-  const isAdminPath    = (pathname.startsWith('/admin') || pathname === '/login') && !pathname.startsWith('/admin/login') && pathname !== '/login';
-  const isAdminLogin   = pathname === '/login';
-  const isKaryawanPath = pathname.startsWith('/karyawan') && !pathname.startsWith('/karyawan/login');
+  const isOwnerPath    = pathname.startsWith('/owner') && pathname !== '/owner/login';
+  const isAdminPath    = pathname.startsWith('/admin') && pathname !== '/admin/login';
+  const isKaryawanPath = pathname.startsWith('/karyawan') && pathname !== '/karyawan/login';
 
   // Public API routes abaikan
   if (pathname.startsWith('/api/auth/')) return NextResponse.next();
@@ -42,15 +41,13 @@ export async function proxy(request: NextRequest) {
 
   // ── Tidak ada session → redirect ke login ────────────────────────────────
   if (!session) {
-    if (isOwnerPath)    return NextResponse.redirect(new URL('/owner/login', request.url));
-    if (isAdminPath)    return NextResponse.redirect(new URL('/login', request.url));
-    if (isKaryawanPath) return NextResponse.redirect(new URL('/karyawan/login', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // ── Session ada tapi role salah → redirect ke login yang sesuai ─────────
-  if (isOwnerPath    && session?.role !== 'owner')    return NextResponse.redirect(new URL('/owner/login', request.url));
-  if (isAdminPath    && session?.role !== 'admin')    return NextResponse.redirect(new URL('/login', request.url));
-  if (isKaryawanPath && session?.role !== 'karyawan') return NextResponse.redirect(new URL('/karyawan/login', request.url));
+  // ── Session ada tapi role tidak cocok → redirect ke login ────────────────
+  if (isOwnerPath    && session.role !== 'owner')    return NextResponse.redirect(new URL('/login', request.url));
+  if (isAdminPath    && session.role !== 'admin')    return NextResponse.redirect(new URL('/login', request.url));
+  if (isKaryawanPath && session.role !== 'karyawan') return NextResponse.redirect(new URL('/login', request.url));
 
   return NextResponse.next();
 }

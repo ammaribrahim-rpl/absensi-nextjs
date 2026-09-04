@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession } from '@/lib/auth/session';
 import {
-  getNowJakarta, formatWaktuIndonesia, getTanggalHariIni,
-  isTelat, getDurasiIstirahat, parseWaktuToDate, getMaxIstirahat, TZ
+  formatWaktuIndonesia, getTanggalHariIni,
+  isTelat, getDurasiIstirahat, getMaxIstirahat, TZ
 } from '@/lib/utils/absensi';
 import { toZonedTime } from 'date-fns-tz';
 import type { TipeAbsen } from '@/types/database';

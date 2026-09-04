@@ -206,7 +206,7 @@ export default function OwnerDashboardClient({
       {/* ── Filter Periode ── */}
       <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
         <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', marginRight: '4px' }}>
-          Periode:
+          Periode ({labelPeriode}):
         </span>
         {periodeOptions.map((p) => (
           <button

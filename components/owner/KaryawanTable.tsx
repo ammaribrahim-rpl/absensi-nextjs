@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Karyawan {
@@ -27,7 +27,7 @@ export default function KaryawanTable({ karyawan, jabatanList, q: initQ }: {
   // Password visibility per row
   const [shownPassIds, setShownPassIds] = useState<Set<string>>(new Set());
   const [showEditPass, setShowEditPass] = useState(false);
-  const [karyawanData, setKaryawanData] = useState(karyawan);
+  const karyawanData = karyawan;
 
   function toggleShowPass(id: string) {
     setShownPassIds(prev => {

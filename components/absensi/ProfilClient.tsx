@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { KaryawanSession } from '@/types/session';
 
 export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja }: {
   karyawan: KaryawanSession; tglMasukFormatted: string; masaKerja: string;
 }) {
+  const router = useRouter();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -16,7 +18,8 @@ export default function ProfilClient({ karyawan: k, tglMasukFormatted, masaKerja
     if (!confirm('Apakah Anda yakin ingin logout?')) return;
     setLoggingOut(true);
     await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/';
+    router.push('/');
+    router.refresh();
   }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {

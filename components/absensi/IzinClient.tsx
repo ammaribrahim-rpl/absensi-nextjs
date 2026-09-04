@@ -36,10 +36,13 @@ export default function IzinClient({ nama, riwayat: initRiwayat }: { nama: strin
 
   return (
     <div style={{ padding: '24px', maxWidth: '680px', margin: '0 auto' }}>
-      <h1 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>
+      <h1 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800 }}>
         <i className="fas fa-calendar-alt" style={{ marginRight: '8px', color: '#4f46e5' }} />
         Pengajuan Izin / Cuti
       </h1>
+      <p style={{ margin: '0 0 20px', fontSize: '0.85rem', color: '#6b7280' }}>
+        Karyawan: <strong>{nama}</strong>
+      </p>
 
       {/* Form */}
       <div className="card card-padded" style={{ marginBottom: '20px' }}>

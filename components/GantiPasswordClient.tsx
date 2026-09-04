@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function GantiPasswordClient({
   apiEndpoint,
@@ -10,6 +11,7 @@ export default function GantiPasswordClient({
   userName: string;
   role: string;
 }) {
+  const router = useRouter();
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -42,7 +44,8 @@ export default function GantiPasswordClient({
     if (!confirm('Apakah Anda yakin ingin logout?')) return;
     setLoggingOut(true);
     await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/';
+    router.push('/');
+    router.refresh();
   }
 
   const accentColor = role === 'owner' ? '#7e22ce' : '#4f46e5';

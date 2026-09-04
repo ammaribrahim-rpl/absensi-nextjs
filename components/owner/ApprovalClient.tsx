@@ -29,7 +29,7 @@ export default function ApprovalClient({ data: initData, statusFilter }: { data:
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        {[['Proses', 'badge-proses'], ['Disetujui', 'badge-setuju'], ['Ditolak', 'badge-tolak']].map(([s, badge]) => (
+        {['Proses', 'Disetujui', 'Ditolak'].map((s) => (
           <button key={s} onClick={() => router.push(`/owner/approval?status=${s}`)}
             style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem',
               background: statusFilter === s ? '#7e22ce' : '#f3f4f6', color: statusFilter === s ? '#fff' : '#374151' }}>
